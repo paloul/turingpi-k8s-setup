@@ -36,7 +36,8 @@ helm version
 
 
 ############################################################
-# Install MetalLB - https://metallb.universe.tf/
+# Install MetalLB - https://metallb.universe.tf/ 
+# DO THIS ONLY ON MASTER NODE
 # Add MetalLB repository to Helm
 helm repo add metallb https://metallb.github.io/metallb
 
@@ -50,3 +51,29 @@ helm upgrade --install metallb metallb/metallb --create-namespace --namespace me
 kubectl apply -f metallb.yaml
 
 ############################################################
+
+
+############################################################
+# Install Longhorn 
+# On each node, ensure nfs-common, open-iscsi, and util-linux are installed
+apt -y install nfs-common open-iscsi util-linux
+
+# Ensure mount points and a directory are set up for SSDs installed and
+# available to each rock-ubuntu host
+
+# Install Longhorn - https://longhorn.io/
+# DO THIS ONLY ON THE MASTER NODE
+# Add longhorn to the helm  
+helm repo add longhorn https://charts.longhorn.io
+
+# Install Longhorn with the UI portal enabled and made available
+# via a loadbalancer with the help of MetalLB
+# The load balancer IP parameter should be from the pool available to metalLB
+# The default data path should point to the mounted location of the SSD /dev/nvme0n1p1->/mnt/nvme0->/data
+helm install longhorn longhorn/longhorn --namespace longhorn-system \
+ --create-namespace --set defaultSettings.defaultDataPath="/data" \
+ --set service.ui.loadBalancerIP="192.168.70.11" --set service.ui.type="LoadBalancer"
+
+############################################################
+
+
